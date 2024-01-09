@@ -5,9 +5,9 @@
 INSTANCE_NAME="civo-production"
 DATABASE_NAME_API="prod_civo_api"
 DATABASE_NAME_DOTCOM="prod_civo_dotcom"
-BACKUP_BUCKET="gs://sql-thg-backups"
+BACKUP_BUCKET="gs://bi-db-caching-backup-target"
 PROCESSING_DIR="../processing"
-NEW_BACKUP_BUCKET=""
+NEW_BACKUP_BUCKET="gs://bi-db-caching-gzip-bucket"
 
 # Step 1: Export MySQL dump backups to the instance
 echo "Exporting MySQL dump backups from GCP storage bucket to the instance..."
@@ -16,8 +16,8 @@ gcloud sql export sql $INSTANCE_NAME $BACKUP_BUCKET/$DATABASE_NAME_DOTCOM.sql --
 
 # Step 2: Compress the database dump backups
 echo "Compressing MySQL dump backups..."
-gzip -f $PROCESSING_DIR/$DATABASE_NAME_API.sql -c > $PROCESSING_DIR/$DATABASE_NAME_API.sql.gz
-gzip -f $PROCESSING_DIR/$DATABASE_NAME_DOTCOM.sql -c > $PROCESSING_DIR/$DATABASE_NAME_DOTCOM.sql.gz
+gzip -v9 -f $PROCESSING_DIR/$DATABASE_NAME_API.sql -c > $PROCESSING_DIR/$DATABASE_NAME_API.sql.gz
+gzip -v9 -f $PROCESSING_DIR/$DATABASE_NAME_DOTCOM.sql -c > $PROCESSING_DIR/$DATABASE_NAME_DOTCOM.sql.gz
 
 # Step 3: Export the compressed backups to a new GCP storage bucket
 echo "Exporting compressed backups to a new GCP storage bucket..."
@@ -32,3 +32,4 @@ rm $PROCESSING_DIR/$DATABASE_NAME_API.sql.gz
 rm $PROCESSING_DIR/$DATABASE_NAME_DOTCOM.sql.gz
 
 echo "Backup process completed successfully."
+

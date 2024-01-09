@@ -39,8 +39,7 @@ def get_intercom_conversations():
     url = f'{INTERCOM_API_ENDPOINT}/conversations'
 
     query = {
-        # get all the data from Intercom
-        'per_page': 100,
+        'per_page': 20,
         'starting_after': None,
         }
 
@@ -48,21 +47,24 @@ def get_intercom_conversations():
                 'Authorization': f'Bearer {INTERCOM_API_KEY}',
                 'Content-Type': 'application/json',
             }
-    
-    # get all the conversations from Intercom in a loop and keep appending them until it comes out of the loop and then convert it alltogether to csv
-    while True:
+    i=0
+    conversations = []
+    while i<3:
         response = requests.get(url, headers=headers, params=query)
-        print(response.json())
+        print(response.json().get('pages', {}))
         if response.status_code!= 200:
             # print the error response from the api call
             print(f'Error getting conversations {response.status_code} {response.text}')
             return pd.DataFrame()
-        conversations = response.json().get('conversations',[])
-        if not conversations:
-            break
+        # conversations = response.json().get('conversations',[])
+        # if not conversations:
+        #     break
         # append all the conversation data 
-        conversations.extend(response.json().get('conversations',[]))
+        # conversations = conversations.extend(response.json().get('conversations',[]))
+        
         query['starting_after'] = response.json().get('pages',{}).get('next', {}).get('starting_after', '')
+        conversations = conversations + response.json().get('conversations',[])
+        i+=1
 
 
     # response = requests.get(url, headers=headers, params=query)
@@ -72,9 +74,10 @@ def get_intercom_conversations():
     #     print(f'Error getting conversations {response.status_code} {response.text}')
     #     return pd.DataFrame()
     # conversations = response.json().get('conversations',[])
-    normalized_data = [flatten_json(conversations)for conversations in conversations]
+    # normalized_data = flatten_json(conversations)
+    normalized_data = pd.json_normalize(conversations)
 
-    return pd.DataFrame(normalized_data)
+    return normalized_data
     # return response.json().get('conversations',[])
 
 
