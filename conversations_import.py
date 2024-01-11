@@ -19,23 +19,12 @@ S3_BUCKET_NAME ='civo-bi-upload/experiment'
 s3 = boto3.resource('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, endpoint_url=ENDPOINT)
 local_path = 'data'
 
-def flatten_json(data, prefix=''):
-    """
-    Flatten nested JSON structure
-    """
-    flat_data = {}
-    for key, value in data.items():
-        if isinstance(value, dict):
-            flat_data.update(flatten_json(value, f'{prefix}{key}_'))
-        else:
-            flat_data[f'{prefix}{key}'] = value
-    return flat_data
 
 def get_intercom_conversations():
     """
-    This function will get all the conversations from Intercom and return a json of the data
+    This function will get all the conversations from Intercom and return a flattened json of the data
     """
-    # Get all the conversations from Intercom
+
     url = f'{INTERCOM_API_ENDPOINT}/conversations'
 
     query = {
@@ -56,29 +45,14 @@ def get_intercom_conversations():
             # print the error response from the api call
             print(f'Error getting conversations {response.status_code} {response.text}')
             return pd.DataFrame()
-        # conversations = response.json().get('conversations',[])
-        # if not conversations:
-        #     break
-        # append all the conversation data 
-        # conversations = conversations.extend(response.json().get('conversations',[]))
         
         query['starting_after'] = response.json().get('pages',{}).get('next', {}).get('starting_after', '')
         conversations = conversations + response.json().get('conversations',[])
         i+=1
 
-
-    # response = requests.get(url, headers=headers, params=query)
-    # print(response.json())
-    # if response.status_code!= 200:
-    #     # print the error response from the api call
-    #     print(f'Error getting conversations {response.status_code} {response.text}')
-    #     return pd.DataFrame()
-    # conversations = response.json().get('conversations',[])
-    # normalized_data = flatten_json(conversations)
     normalized_data = pd.json_normalize(conversations)
-
     return normalized_data
-    # return response.json().get('conversations',[])
+
 
 
 def write_to_csv(data, filename):
@@ -100,7 +74,7 @@ def main():
         print('No conversations found')
         return
     
-    print(f'Found {len(conversations)} conversations')
+    print(f'Found {len(conversations)} Conversations')
     # if there is an existing file in s3 append only the new data to it else create new file
     # if s3.Object(S3_BUCKET_NAME, 'conversations.csv').get()['Body']:
     #     # get the last conversation id from the existing file
@@ -115,14 +89,23 @@ def main():
     #     write_to_csv(conversations, 'conversations.csv')
     #     upload_to_s3('conversations.csv', 'conversations.csv')
 
-    #if file is found, write it to csv and store in localqq
-    filename = f'intercom_{datetime.now().strftime("%Y%m%d%H%M%S")}.csv'
+    
+    # filename = f'intercom_{datetime.now().strftime("%Y%m%d%H%M%S")}.csv'
+    filename = "conversations.csv"
+
+    # convert to csv and upload to s3 
+    conversations.to_csv(filename, index=False)
+    # upload the file to s3 or replace if there exists a file 
+    upload_to_s3(conversations.to_csv(filename, index=False), filename)
+
+    print(f'file uploaded to s3' )
+
     # s3_key = f'intercom_data/{filename}'
 
     # local_path = write_to_csv(conversations, filename)
-    local_path = conversations.to_csv(filename, index=False)
+    # local_path = conversations.to_csv(filename, index=False)
 
-    print(f'file downloaded' )
+    # print(f'file downloaded' )
 
 if __name__ == '__main__':
     main()
