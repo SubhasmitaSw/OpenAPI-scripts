@@ -63,9 +63,13 @@ def write_to_csv(data, filename):
         write.writeheader()
         write.writerows(data)
 
-def upload_to_s3(local_file, s3_key):
+# def upload_to_s3(local_file, s3_key):
+#     s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, endpoint_url=ENDPOINT)
+#     s3.upload_file(local_file, S3_BUCKET_NAME, s3_key)
+
+def upload_to_s3_from_ram(data, filename):
     s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, endpoint_url=ENDPOINT)
-    s3.upload_file(local_file, S3_BUCKET_NAME, s3_key)
+    s3.put_object(Body=data, Bucket=S3_BUCKET_NAME, Key=filename)
 
 
 def main():
@@ -78,12 +82,15 @@ def main():
 
     
     # filename = f'intercom_{datetime.now().strftime("%Y%m%d%H%M%S")}.csv'
-    filename = "conversations.csv"
+    # filename = "conversations.csv"
 
     # convert to csv and upload to s3 
-    conversations.to_csv(filename, index=False)
+    # conversations.to_csv("conversations.csv", index=False)
     # upload the file to s3 or replace if there exists a file 
-    upload_to_s3("./conversations.csv", filename)
+    # upload_to_s3("./conversations.csv", filename)
+
+    # upload to s3 directly from RAM instead of from disk
+    upload_to_s3_from_ram("conversations.to_csv(conversations.csv, index=False)", "conversations.csv")
 
     print(f'file uploaded to s3' )
 
