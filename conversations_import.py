@@ -13,8 +13,8 @@ INTERCOM_API_ENDPOINT= 'https://api.intercom.io/'
 # CIVO S3 Credentials
 ACCESS_KEY = 'N0DEU6BRNKJX5XY4SDW6'
 SECRET_KEY = 'r1Hg3ezGKOCmrBhYGpRpOI069cdDd4ggVJ51zzg1'
-ENDPOINT = 'https://objectstore.lon1.civo.com/'
-S3_BUCKET_NAME ='civo-bi-upload/experiment'
+ENDPOINT = 'https://objectstore.lon1.civo.com/civo-bi-upload'
+S3_BUCKET_NAME ='experiment'
 
 s3 = boto3.resource('s3', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY, endpoint_url=ENDPOINT)
 local_path = 'data'
@@ -75,19 +75,6 @@ def main():
         return
     
     print(f'Found {len(conversations)} Conversations')
-    # if there is an existing file in s3 append only the new data to it else create new file
-    # if s3.Object(S3_BUCKET_NAME, 'conversations.csv').get()['Body']:
-    #     # get the last conversation id from the existing file
-    #     last_conversation_id = s3.Object(S3_BUCKET_NAME, 'conversations.csv').get()['Body'].read().decode('utf-8').split('\n')[-2]
-    #     # filter the conversations to get only the new ones
-    #     new_conversations = [conversation for conversation in conversations if conversation['id'] > last_conversation_id]
-    #     # if there are new conversations write them to a csv file and upload it to s3
-    #     if new_conversations:
-    #         write_to_csv(new_conversations, 'conversations.csv')
-    #         upload_to_s3('conversations.csv', 'conversations.csv')
-    # else:
-    #     write_to_csv(conversations, 'conversations.csv')
-    #     upload_to_s3('conversations.csv', 'conversations.csv')
 
     
     # filename = f'intercom_{datetime.now().strftime("%Y%m%d%H%M%S")}.csv'
@@ -96,16 +83,9 @@ def main():
     # convert to csv and upload to s3 
     conversations.to_csv(filename, index=False)
     # upload the file to s3 or replace if there exists a file 
-    upload_to_s3(conversations.to_csv(filename, index=False), filename)
+    upload_to_s3("./conversations.csv", filename)
 
     print(f'file uploaded to s3' )
-
-    # s3_key = f'intercom_data/{filename}'
-
-    # local_path = write_to_csv(conversations, filename)
-    # local_path = conversations.to_csv(filename, index=False)
-
-    # print(f'file downloaded' )
 
 if __name__ == '__main__':
     main()
