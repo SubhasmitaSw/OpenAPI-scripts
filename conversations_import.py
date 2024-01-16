@@ -1,10 +1,7 @@
-import json
 import boto3
 import csv
 import requests
 import pandas as pd
-from io import StringIO
-from datetime import datetime
 
 # Intercom API Credentials 
 INTERCOM_API_KEY = 'dG9rOmQyOGUxNzA2X2ZkMTBfNGM2Ml9iOTM4X2FmOWYxZjZlYWQwNToxOjA='
