@@ -1,0 +1,3 @@
+boto3==1.33.11
+pandas==2.1.4
+Requests==2.31.0
